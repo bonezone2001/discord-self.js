@@ -1,11 +1,9 @@
 /// <reference types="node" />
 /// <reference types="node" />
-/// <reference types="node" />
-import { CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
+import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
 import { GetMessageOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions } from "./types/discord-user";
 import { EventEmitter } from 'events';
 import { User } from "./user";
-import { Channel } from "diagnostics_channel";
 /**
  * Login and control a Discord user given their auth token.
  * Make sure to call init() before using any other methods.

@@ -12,7 +12,7 @@
     Automate your discord account however you so choose
     <br />
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template">View Example</a>
+    <a href="https://github.com/bonezone2001/discord-self.js/blob/main/example.ts">View Example</a>
     ·
     <a href="https://github.com/bonezone2001/discord-self.js/issues">Report Bug</a>
     ·
@@ -26,12 +26,7 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
+    <li><a href="#about-the-project">About The Project</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
@@ -48,116 +43,118 @@
   </ol>
 </details>
 
-
+<br>
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+Automating discord is cumbersome when all the mature options seem to restrict access to user accounts. This prevents so many cool things from being able to work and I often found myself wanting to create these things so I decided to throw together a library that is fast and robust (hopefully).
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+Here are some use cases:
+* Auto responding to messages
+* Exporting your DM or guild messages.
+* Leaving all your guilds
+* Copying data you typically don't see
+* Downloading media
+* Auto filter your chat messages
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
+The project is still fairly young so it's missing some vital features but for most it should suffice. If you need a particular feature implemented just create a feature request in the issues section.
 
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+<br>
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+To start using discord-self.js you will need to install it via npm or yarn. You will also need access to your discord token -> [One of the methods](https://www.youtube.com/watch?v=i658UNXNRJQ)
 
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
 * npm
   ```sh
-  npm install npm@latest -g
+  npm install discord-self.js
+  ```
+* yarn
+  ```sh
+  yarn add discord-self.js
   ```
 
-### Installation
-
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+<br>
 
 <!-- USAGE EXAMPLES -->
-## Usage
+## Usage and Examples
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Using discord-self.js is simple, just provide it your token, initialize and login. After that, for most features, it won't matter if the websocket disconnects or not. Just request away.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+* Login and retrieve all DM messages (for exporting for example)
+```ts
+import { Discord } from 'discord-self.js';
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+(async () => {
+    const discord = new Discord("DISCORD-TOKEN-HERE");
 
+    // Login
+    await discord.init();
+    if (!await discord.login()) throw new Error("Cannot login");
+    console.log("Logged in as " + discord.userTag);
 
+    // Get all DM channels
+    const channels = await discord.getDMChannels();
+    console.log(`Found ${channels.length} DM channels`);
+
+    // Get all messages from each channel
+    for (const channel of channels) {
+        const messages = await discord.getAllMessages(channel.id);
+        console.log(`Found ${messages.length} messages in channel ${channel.id}`);
+    }
+})();
+```
+
+* Custom Emoji are parsed from content automatically
+```ts
+await discord.sendMessage("897219587714719748", ":balls_emoji:");
+```
+
+* Save all your valuable information
+```ts
+import { Utils, Discord } from 'discord-self.js';
+import fs from 'fs';
+
+(async () => {
+    const discord = new Discord("ODg4MDkzMzQ3NTgxOTQ3OTI0.YUNr4w.9j2REEA7SWrJvUtPMZv8xHPda70");
+
+    await discord.init();
+    if (!await discord.login()) throw new Error("Cannot login");
+    fs.writeFileSync("user.json", Utils.jsonFormat(Object.assign({}, discord.sessionInfo.user, { country_code: discord.sessionInfo.country_code })));
+    fs.writeFileSync("user_settings.json", Utils.jsonFormat(discord.sessionInfo.user_settings));
+    fs.writeFileSync("sessions.json", Utils.jsonFormat(discord.sessionInfo.sessions));
+    fs.writeFileSync("relationships.json", Utils.jsonFormat(discord.sessionInfo.relationships));
+    fs.writeFileSync("guilds.json", Utils.jsonFormat(discord.sessionInfo.guilds));
+    fs.writeFileSync("connected_accounts.json", Utils.jsonFormat(discord.sessionInfo.connected_accounts));
+    fs.writeFileSync("payment_sources.json", Utils.jsonFormat(await discord.getPaymentSources()));
+    fs.writeFileSync("payments.json", Utils.jsonFormat(await discord.getPayments()));
+})();
+```
+These are just a few examples but you can do most of the things a typical user can do and more.
 
 <!-- ROADMAP -->
 ## Roadmap
+Although I say it can do most things. There is still much to do
+- Implement voice connection and streaming
+- Add more creation commands to automate creating guilds, channels, roles, etc.
+- Possibly wrap the event emitter up and add type information instead of raw websocket events.
+- Lazy guild loading. Super easy just need to find the time.
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+Find somethings missing and it's not here? [Open an issue](https://github.com/othneildrew/Best-README-Template/issues) and let me know what could be improved.
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<br>
 
 
 
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Any contributions you can make are **super appreciated**.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+Don't forget to give the project a star! Mwah!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -165,63 +162,17 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+<br>
 
 
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/bonezone2001/discord-self.js/blob/main/LICENSE) for more information.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
-
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+<br>
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+* [Amazing github template thanks a bunch](https://github.com/othneildrew/Best-README-Template)

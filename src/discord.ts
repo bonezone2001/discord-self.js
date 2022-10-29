@@ -1,11 +1,10 @@
-import { CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
+import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
 import { GetMessageOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions } from "./types/discord-user";
 import { EventEmitter } from 'events';
 import FormData from 'form-data';
 import { Utils } from "./utils";
 import { WebSocket } from 'ws';
 import { User } from "./user";
-import { Channel } from "diagnostics_channel";
 
 /**
  * Login and control a Discord user given their auth token.
@@ -195,7 +194,7 @@ export class Discord extends EventEmitter {
         const emojis = await this.getCustomEmojis();
         const emojiRegex = /:(\w+):/g;
 
-        let response: string | Emoji | null = null;
+        let response: string | Emoji | null = content;
         let match: RegExpExecArray | null;
         while (match = emojiRegex.exec(content)) {
             const emoji = emojis.find(emoji => emoji.name === match[1]);
