@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "outDir": "lib",
+        "target": "ESNext",
+        "module": "CommonJS",
+        "esModuleInterop": true
+    },
+    "include": [
+        "src/**/*",
+        "src/types/**/*"
+    ]
+}
