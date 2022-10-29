@@ -2,6 +2,7 @@
   "name": "discord-self.js",
   "version": "0.1.1",
   "description": "A discord API/Gateway wrapper for user accounts",
+  "keywords": ["discord", "api", "client", "automation", "wrapper"],
   "main": "lib/index",
   "types": "lib/index",
   "scripts": {
