@@ -34,3 +34,4 @@ jspm_packages/
 .env.test
 .cache
 .cache/
+lib

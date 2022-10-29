@@ -111,7 +111,7 @@ import { Utils, Discord } from 'discord-self.js';
 import fs from 'fs';
 
 (async () => {
-    const discord = new Discord("ODg4MDkzMzQ3NTgxOTQ3OTI0.YUNr4w.9j2REEA7SWrJvUtPMZv8xHPda70");
+    const discord = new Discord("DISCORD-TOKEN-HERE");
 
     await discord.init();
     if (!await discord.login()) throw new Error("Cannot login");
