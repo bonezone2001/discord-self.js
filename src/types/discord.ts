@@ -85,19 +85,28 @@ export interface Guild {
     application_command_counts: { [key: string]: number };
 }
 
+export interface GuildSummary {
+    id: string;
+    name: string;
+    icon: string;
+    owner: boolean;
+    permissions: string;
+    features: string[];
+}
+
 export interface Channel {
-    version: number;
+    version?: number;
     type: number;
     topic?: null | string;
     rate_limit_per_user?: number;
-    position: number;
-    permission_overwrites: PermissionOverwrite[];
+    position?: number;
+    permission_overwrites?: PermissionOverwrite[];
     parent_id?: null | string;
     nsfw?: boolean;
     name: string;
     last_message_id?: null | string;
-    id: string;
-    flags: number;
+    id?: string;
+    flags?: number;
     last_pin_timestamp?: Date | null;
     user_limit?: number;
     rtc_region?: null | string;

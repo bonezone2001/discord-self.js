@@ -1,6 +1,9 @@
+import { Constants } from './constants';
 import { Emoji } from './types/discord';
 import { createReadStream } from 'fs';
 import FormData from 'form-data';
+import { User } from './user';
+import axios from 'axios';
 
 export class Utils {
     static async sleep(ms: number) {
@@ -53,5 +56,35 @@ export class Utils {
 
     static isEmojiObj(object: any): object is Emoji {
         return 'id' in object;
+    }
+
+    static async downloadFile(url: string, options: any = {}, user: User = null) {
+        const headers = user ? user.userHeaders(options.headers) : Constants.defaultHeaders;
+        delete options.headers;
+        const res = await axios({
+            url,
+            method: "GET",
+            headers,
+            responseType: "arraybuffer",
+            ...options,
+        });
+        return res.data;
+    }
+
+    // TODO: Improve this lameness
+    static async waitIfRateLimited<T>(func: () => Promise<T>): Promise<T> {
+        while (true) {
+            try { return await func(); }
+            catch (e) {
+                if (e?.response?.data && e?.response?.data.retry_after) {
+                    if (e.response.data.retry_after> 180)
+                        throw new Error("Rate limit very high, aborting wait");
+                    console.log(`Rate limited, waiting ${e.response.data.retry_after} seconds`);
+                    await Utils.sleep(e.response.data.retry_after * 1000 + 100);
+                    continue;
+                }
+                throw e;
+            }
+        }
     }
 }
