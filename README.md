@@ -130,6 +130,7 @@ These are just a few examples but you can do most of the things a typical user c
 <!-- ROADMAP -->
 ## Roadmap
 Although I say it can do most things. There is still much to do
+- Add testing to keep things professional
 - Implement voice connection and streaming
 - Implement some method for gracefully handling rate limits
 - Cover most of the REST API
