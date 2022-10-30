@@ -125,6 +125,19 @@ import fs from 'fs';
     fs.writeFileSync("payments.json", Utils.jsonFormat(await discord.getPayments()));
 })();
 ```
+
+* Wait for rate limits (this is something that needs a lot of work)
+```ts
+import { Utils } from 'discord-self.js';
+
+// ... etc
+
+// <any> should be the type the function returns (if you want types)
+await Utils.waitIfRateLimited<any>(async () => {
+    return await discord.deleteGuildRole(guild.id!, role.id!);
+});
+```
+
 These are just a few examples but you can do most of the things a typical user can do and more.
 
 <!-- ROADMAP -->
