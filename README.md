@@ -131,6 +131,7 @@ These are just a few examples but you can do most of the things a typical user c
 ## Roadmap
 Although I say it can do most things. There is still much to do
 - Implement voice connection and streaming
+- Implement some method for gracefully handling rate limits
 - Add more creation commands to automate creating guilds, channels, roles, etc.
 - Possibly wrap the event emitter up and add type information instead of raw websocket events.
 - Lazy guild loading. Super easy just need to find the time.
