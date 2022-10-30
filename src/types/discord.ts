@@ -85,6 +85,15 @@ export interface Guild {
     application_command_counts: { [key: string]: number };
 }
 
+export interface GuildSummary {
+    id: string;
+    name: string;
+    icon: string;
+    owner: boolean;
+    permissions: string;
+    features: string[];
+}
+
 export interface Channel {
     version?: number;
     type: number;
