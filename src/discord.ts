@@ -177,7 +177,48 @@ export class Discord extends EventEmitter {
         Utils.arrayResponseAssert(guilds, "Failed to get guilds");
         return guilds;
     }
+
+    async createGuild(name: string): Promise<Guild> {
+        const guild = (await this._user.sendAsUser({
+            url: "https://discord.com/api/v9/guilds",
+            method: "POST",
+            data: { name }
+        }))?.data;
+
+        Utils.missingIdAssert(guild, "Failed to create guild");
+        return guild;
+    }
     
+    async deleteGuild(guildId: string) {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}`,
+            method: "DELETE"
+        });
+    }
+
+    // EMOJI
+    
+    async createEmoji(guildId: string, name: string, image: Buffer) {
+        const emoji = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/emojis`,
+            method: "POST",
+            data: {
+                name,
+                image: `data:image/png;base64,${image.toString("base64")}`
+            }
+        }))?.data;
+
+        Utils.missingIdAssert(emoji, "Failed to create emoji");
+        return emoji;
+    }
+
+    async deleteEmoji(guildId: string, emojiId: string) {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/emojis/${emojiId}`,
+            method: "DELETE"
+        });
+    }
+
     async getCustomEmojis(name?: string): Promise<Emoji[]> {
         if (!this._sessionInfo) throw new Error("Session info not set");
         const emojis = this._sessionInfo.guilds.reduce((acc, guild) => acc.concat(guild.emojis), []);
@@ -267,6 +308,35 @@ export class Discord extends EventEmitter {
 
         Utils.arrayResponseAssert(channels, "Failed to get DM channels");
         return channels;
+    }
+
+    async createChannel(guildId: string, channel: Channel): Promise<Channel> {
+        const newChannel = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/channels`,
+            method: "POST",
+            data: channel
+        }))?.data;
+
+        Utils.missingIdAssert(newChannel, "Failed to create channel");
+        return newChannel;
+    }
+
+    async editChannel(channelId: string, channel: Channel): Promise<Channel> {
+        const newChannel = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/channels/${channelId}`,
+            method: "PATCH",
+            data: channel
+        }))?.data;
+
+        Utils.missingIdAssert(newChannel, "Failed to edit channel");
+        return newChannel;
+    }
+
+    async deleteChannel(channelId: string): Promise<void> {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/channels/${channelId}`,
+            method: "DELETE"
+        });
     }
 
     // ROLES
