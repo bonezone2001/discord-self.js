@@ -132,9 +132,9 @@ These are just a few examples but you can do most of the things a typical user c
 Although I say it can do most things. There is still much to do
 - Implement voice connection and streaming
 - Implement some method for gracefully handling rate limits
-- Add more creation commands to automate creating guilds, channels, roles, etc.
-- Possibly wrap the event emitter up and add type information instead of raw websocket events.
-- Lazy guild loading. Super easy just need to find the time.
+- Cover most of the REST API
+- Possibly wrap the event emitter up and add type information instead of raw websocket events
+- Lazy guild loading. Super easy just need to find the time
 
 Find somethings missing and it's not here? [Open an issue](https://github.com/othneildrew/Best-README-Template/issues) and let me know what could be improved.
 
