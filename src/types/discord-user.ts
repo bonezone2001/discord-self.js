@@ -13,6 +13,19 @@ export interface SendMessageReplyOptions {
     content: string;
 }
 
+export interface SetGuildInfoOptions {
+    name?: string;
+    region?: string;
+    icon?: string;
+    verificationLevel?: number;
+    defaultMessageNotifications?: number;
+    explicitContentFilter?: number;
+    afkChannelId?: string;
+    afkTimeout?: number;
+    systemChannelId?: string;
+    systemChannelFlags?: number;
+}
+
 export enum ParseEmojiResponseType {
     Raw = 0,
     Message = 1,

@@ -125,15 +125,30 @@ import fs from 'fs';
     fs.writeFileSync("payments.json", Utils.jsonFormat(await discord.getPayments()));
 })();
 ```
+
+* Wait for rate limits (this is something that needs a lot of work)
+```ts
+import { Utils } from 'discord-self.js';
+
+// ... etc
+
+// <any> should be the type the function returns (if you want types)
+await Utils.waitIfRateLimited<any>(async () => {
+    return await discord.deleteGuildRole(guild.id!, role.id!);
+});
+```
+
 These are just a few examples but you can do most of the things a typical user can do and more.
 
 <!-- ROADMAP -->
 ## Roadmap
 Although I say it can do most things. There is still much to do
+- Add testing to keep things professional
 - Implement voice connection and streaming
-- Add more creation commands to automate creating guilds, channels, roles, etc.
-- Possibly wrap the event emitter up and add type information instead of raw websocket events.
-- Lazy guild loading. Super easy just need to find the time.
+- Implement some method for gracefully handling rate limits
+- Cover most of the REST API
+- Possibly wrap the event emitter up and add type information instead of raw websocket events
+- Lazy guild loading. Super easy just need to find the time
 
 Find somethings missing and it's not here? [Open an issue](https://github.com/othneildrew/Best-README-Template/issues) and let me know what could be improved.
 

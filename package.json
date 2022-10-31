@@ -1,6 +1,6 @@
 {
   "name": "discord-self.js",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "A discord API/Gateway wrapper for user accounts",
   "keywords": ["discord", "api", "client", "automation", "wrapper"],
   "main": "lib/index",
@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "debug": "node debug.js",
     "test": "echo \"TO DO\" && exit 1"
   },
   "repository": "https://github.com/bonezone2001/discord-self.js.git",

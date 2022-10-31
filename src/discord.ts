@@ -1,5 +1,5 @@
-import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
-import { GetMessageOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions } from "./types/discord-user";
+import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, GuildSummary, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
+import { GetMessageOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions, SetGuildInfoOptions } from "./types/discord-user";
 import { EventEmitter } from 'events';
 import FormData from 'form-data';
 import { Utils } from "./utils";
@@ -169,7 +169,7 @@ export class Discord extends EventEmitter {
         return guild;
     }
 
-    async getGuilds(): Promise<Guild[]> {
+    async getGuilds(): Promise<GuildSummary[]> {
         const guilds = (await this._user.sendAsUser({
             url: "https://discord.com/api/v9/users/@me/guilds"
         }))?.data;
@@ -177,7 +177,70 @@ export class Discord extends EventEmitter {
         Utils.arrayResponseAssert(guilds, "Failed to get guilds");
         return guilds;
     }
+
+    async createGuild(name: string): Promise<Guild> {
+        const guild = (await this._user.sendAsUser({
+            url: "https://discord.com/api/v9/guilds",
+            method: "POST",
+            data: { name }
+        }))?.data;
+
+        Utils.missingIdAssert(guild, "Failed to create guild");
+        return guild;
+    }
+
+    async setGuildInfo(guildId: string, data: SetGuildInfoOptions): Promise<Guild> {
+        const guild = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}`,
+            method: "PATCH",
+            data: {
+                name: data.name,
+                region: data.region,
+                verification_level: data.verificationLevel,
+                default_message_notifications: data.defaultMessageNotifications,
+                explicit_content_filter: data.explicitContentFilter,
+                afk_channel_id: data.afkChannelId,
+                afk_timeout: data.afkTimeout,
+                system_channel_id: data.systemChannelId,
+                system_channel_flags: data.systemChannelFlags,
+                icon: data.icon
+            }
+        }))?.data;
+
+        Utils.missingIdAssert(guild, "Failed to set guild info");
+        return guild;
+    }
     
+    async deleteGuild(guildId: string) {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}`,
+            method: "DELETE"
+        });
+    }
+
+    // EMOJI
+    
+    async createEmoji(guildId: string, name: string, image: Buffer, imageExt: string): Promise<Emoji> {
+        const emoji = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/emojis`,
+            method: "POST",
+            data: {
+                name,
+                image: `data:image/${imageExt};base64,${image.toString("base64")}`
+            }
+        }))?.data;
+
+        Utils.missingIdAssert(emoji, "Failed to create emoji");
+        return emoji;
+    }
+
+    async deleteEmoji(guildId: string, emojiId: string) {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/emojis/${emojiId}`,
+            method: "DELETE"
+        });
+    }
+
     async getCustomEmojis(name?: string): Promise<Emoji[]> {
         if (!this._sessionInfo) throw new Error("Session info not set");
         const emojis = this._sessionInfo.guilds.reduce((acc, guild) => acc.concat(guild.emojis), []);
@@ -269,9 +332,37 @@ export class Discord extends EventEmitter {
         return channels;
     }
 
+    async createChannel(guildId: string, channel: Channel): Promise<Channel> {
+        const newChannel = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/guilds/${guildId}/channels`,
+            method: "POST",
+            data: channel
+        }))?.data;
+
+        Utils.missingIdAssert(newChannel, "Failed to create channel");
+        return newChannel;
+    }
+
+    async editChannel(channelId: string, channel: Channel): Promise<Channel> {
+        const newChannel = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/channels/${channelId}`,
+            method: "PATCH",
+            data: channel
+        }))?.data;
+
+        Utils.missingIdAssert(newChannel, "Failed to edit channel");
+        return newChannel;
+    }
+
+    async deleteChannel(channelId: string): Promise<void> {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/channels/${channelId}`,
+            method: "DELETE"
+        });
+    }
+
     // ROLES
 
-    // UNTESTED
     async getGuildRoles(guildId: string): Promise<Role[]> {
         const roles = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/roles`
@@ -321,9 +412,6 @@ export class Discord extends EventEmitter {
             url: `https://discord.com/api/v9/guilds/${guildId}/roles/${roleId}`,
             method: "DELETE"
         }))?.data;
-
-        Utils.missingIdAssert(response, "Failed to delete guild role");
-        return response;
     }
 
     // PROFILE

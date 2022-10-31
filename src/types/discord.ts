@@ -85,19 +85,28 @@ export interface Guild {
     application_command_counts: { [key: string]: number };
 }
 
+export interface GuildSummary {
+    id: string;
+    name: string;
+    icon: string;
+    owner: boolean;
+    permissions: string;
+    features: string[];
+}
+
 export interface Channel {
-    version: number;
-    type: number;
+    version?: number;
+    type: ChannelType;
     topic?: null | string;
     rate_limit_per_user?: number;
-    position: number;
-    permission_overwrites: PermissionOverwrite[];
+    position?: number;
+    permission_overwrites?: PermissionOverwrite[];
     parent_id?: null | string;
     nsfw?: boolean;
     name: string;
     last_message_id?: null | string;
-    id: string;
-    flags: number;
+    id?: string;
+    flags?: number;
     last_pin_timestamp?: Date | null;
     user_limit?: number;
     rtc_region?: null | string;
@@ -123,8 +132,27 @@ export interface DefaultReactionEmoji {
     emoji_id: null;
 }
 
+export enum PermissionOverrideType {
+    ROLE = 0,
+    MEMBER = 1
+}
+
+export enum ChannelType {
+    GUILD_TEXT = 0,
+    DM = 1,
+    GUILD_VOICE = 2,
+    GROUP_DM = 3,
+    GUILD_CATEGORY = 4,
+    GUILD_NEWS = 5,
+    GUILD_STORE = 6,
+    GUILD_NEWS_THREAD = 10,
+    GUILD_PUBLIC_THREAD = 11,
+    GUILD_PRIVATE_THREAD = 12,
+    GUILD_STAGE_VOICE = 13
+}
+
 export interface PermissionOverwrite {
-    type: number;
+    type: PermissionOverrideType;
     id: string;
     deny: string;
     allow: string;
