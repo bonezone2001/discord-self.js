@@ -96,7 +96,7 @@ export interface GuildSummary {
 
 export interface Channel {
     version?: number;
-    type: number;
+    type: ChannelType;
     topic?: null | string;
     rate_limit_per_user?: number;
     position?: number;
@@ -132,8 +132,27 @@ export interface DefaultReactionEmoji {
     emoji_id: null;
 }
 
+export enum PermissionOverrideType {
+    ROLE = 0,
+    MEMBER = 1
+}
+
+export enum ChannelType {
+    GUILD_TEXT = 0,
+    DM = 1,
+    GUILD_VOICE = 2,
+    GROUP_DM = 3,
+    GUILD_CATEGORY = 4,
+    GUILD_NEWS = 5,
+    GUILD_STORE = 6,
+    GUILD_NEWS_THREAD = 10,
+    GUILD_PUBLIC_THREAD = 11,
+    GUILD_PRIVATE_THREAD = 12,
+    GUILD_STAGE_VOICE = 13
+}
+
 export interface PermissionOverwrite {
-    type: number;
+    type: PermissionOverrideType;
     id: string;
     deny: string;
     allow: string;

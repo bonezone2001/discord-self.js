@@ -193,7 +193,18 @@ export class Discord extends EventEmitter {
         const guild = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}`,
             method: "PATCH",
-            data
+            data: {
+                name: data.name,
+                region: data.region,
+                verification_level: data.verificationLevel,
+                default_message_notifications: data.defaultMessageNotifications,
+                explicit_content_filter: data.explicitContentFilter,
+                afk_channel_id: data.afkChannelId,
+                afk_timeout: data.afkTimeout,
+                system_channel_id: data.systemChannelId,
+                system_channel_flags: data.systemChannelFlags,
+                icon: data.icon
+            }
         }))?.data;
 
         Utils.missingIdAssert(guild, "Failed to set guild info");
@@ -209,13 +220,13 @@ export class Discord extends EventEmitter {
 
     // EMOJI
     
-    async createEmoji(guildId: string, name: string, image: Buffer) {
+    async createEmoji(guildId: string, name: string, image: Buffer, imageExt: string): Promise<Emoji> {
         const emoji = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/emojis`,
             method: "POST",
             data: {
                 name,
-                image: `data:image/png;base64,${image.toString("base64")}`
+                image: `data:image/${imageExt};base64,${image.toString("base64")}`
             }
         }))?.data;
 
