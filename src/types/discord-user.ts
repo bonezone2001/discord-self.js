@@ -23,6 +23,7 @@ export interface SetGuildInfoOptions {
     afkChannelId?: string;
     afkTimeout?: number;
     systemChannelId?: string;
+    systemChannelFlags?: number;
 }
 
 export enum ParseEmojiResponseType {
