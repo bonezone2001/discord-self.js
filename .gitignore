@@ -35,3 +35,4 @@ jspm_packages/
 .cache
 .cache/
 lib
+debug.js
