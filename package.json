@@ -1,6 +1,6 @@
 {
   "name": "discord-self.js",
-  "version": "0.1.13",
+  "version": "0.2.0",
   "description": "A discord API/Gateway wrapper for user accounts",
   "keywords": [
     "discord",
