@@ -1,4 +1,4 @@
-export interface GetMessageOptions {
+export interface GetMessagesOptions {
     channelId: string;
     limit?: number;
     before?: string;

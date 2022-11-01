@@ -1,5 +1,5 @@
 import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, GuildSummary, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
-import { GetMessageOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions, SetGuildInfoOptions } from "./types/discord-user";
+import { GetMessagesOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions, SetGuildInfoOptions } from "./types/discord-user";
 import { EventEmitter } from 'events';
 import FormData from 'form-data';
 import { Utils } from "./utils";
@@ -31,7 +31,18 @@ export class Discord extends EventEmitter {
 
     // MESSAGES
 
-    async getMessages(data: string | GetMessageOptions): Promise<Message[]> {
+    // Get specific messaae
+    async getMessage(channelId: string, messageId: string): Promise<Message> {
+        const message = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/channels/${channelId}/messages/${messageId}`,
+            method: "GET"
+        }))?.data;
+
+        Utils.missingIdAssert(message, "Failed to get message");
+        return message;
+    }
+
+    async getMessages(data: string | GetMessagesOptions): Promise<Message[]> {
         if (typeof data === "string") data = { channelId: data };
         const messages = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/channels/${data.channelId}/messages?limit=${data.limit || 100}${data.before ? `&before=${data.before}` : ""}${data.after ? `&after=${data.after}` : ""}${data.around ? `&around=${data.around}` : ""}`
@@ -90,14 +101,14 @@ export class Discord extends EventEmitter {
         return message;
     }
 
-    async updateMessage(channelId: string, messageId: string, content: string): Promise<Message> {
+    async editMessage(channelId: string, messageId: string, content: string): Promise<Message> {
         const message = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/channels/${channelId}/messages/${messageId}`,
             method: "PATCH",
             data: { content: await this.tryParseCustomEmojis(content) }
         }))?.data;
 
-        Utils.missingIdAssert(message, "Failed to update message");
+        Utils.missingIdAssert(message, "Failed to edit message");
         return message;
     }
 
@@ -108,17 +119,12 @@ export class Discord extends EventEmitter {
         });
     }
 
-    // UNTESTED
-    // Typical bot endpoint, not tested with user accounts
     async bulkDeleteMessages(channelId: string, messageIds: string[]) {
-        if (messageIds.length > 100) throw new Error("Cannot delete more than 100 messages at once");
         if (messageIds.length === 1) return this.deleteMessage(channelId, messageIds[0]);
-
-        await this._user.sendAsUser({
-            url: `https://discord.com/api/v9/channels/${channelId}/messages/bulk-delete`,
-            method: "POST",
-            data: { messages: messageIds }
-        });
+        for (const messageId of messageIds) {
+            await this.deleteMessage(channelId, messageId);
+            await Utils.sleep(100);
+        }
     }
 
     async addReaction(channelId: string, messageId: string, emoji: string) {
@@ -241,9 +247,13 @@ export class Discord extends EventEmitter {
         });
     }
 
-    async getCustomEmojis(name?: string): Promise<Emoji[]> {
+    async getAllCustomEmoji(): Promise<Emoji[]> {
         if (!this._sessionInfo) throw new Error("Session info not set");
-        const emojis = this._sessionInfo.guilds.reduce((acc, guild) => acc.concat(guild.emojis), []);
+        return this._sessionInfo.guilds.reduce((acc, guild) => acc.concat(guild.emojis), []);
+    }
+
+    async searchCustomEmoji(name: string): Promise<Emoji[]> {
+        const emojis = await this.getAllCustomEmoji();
         return name ? emojis.filter(emoji => emoji.name === name) : emojis;
     }
 
@@ -254,7 +264,7 @@ export class Discord extends EventEmitter {
     }
 
     async parseCustomEmojis(content: string, resType: ParseEmojiResponseType = ParseEmojiResponseType.Message) {
-        const emojis = await this.getCustomEmojis();
+        const emojis = await this.getAllCustomEmoji();
         const emojiRegex = /:(\w+):/g;
 
         let response: string | Emoji | null = content;
@@ -372,7 +382,6 @@ export class Discord extends EventEmitter {
         return roles;
     }
 
-    // UNTESTED
     async getGuildRole(guildId: string, roleId: string): Promise<Role> {
         const role = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/roles/${roleId}`
