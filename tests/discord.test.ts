@@ -8,7 +8,7 @@ const testEnv = {
 	CHANNEL_ID_TEXT_OPS: process.env.TEST_CHANNEL_TEXT_OPS!,
 	GUILD_ID: process.env.TEST_GUILD!,
 	USER_ID: process.env.TEST_USER!,
-	MESSAGE_ID: process.env.TEST_MESSAGE!,
+	MESSAGE_ID: process.env.TEST_MESSAGE!, 
 };
 
 let error = false;
