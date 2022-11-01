@@ -1,6 +1,5 @@
 import { Constants } from './constants';
 import { Emoji } from './types/discord';
-import { createReadStream } from 'fs';
 import FormData from 'form-data';
 import { User } from './user';
 import axios from 'axios';
@@ -12,15 +11,16 @@ export class Utils {
 
     static base64Encode(data: any) {
         if (typeof data === "object") data = JSON.stringify(data);
+        else data = String(data);
         return Buffer.from(data).toString('base64');
     }
 
-    static createMessageForm(data: any, files: string[] | Buffer[] = []) {
+    static createMessageForm(data: any, files: (string | Buffer)[] = []) {
         const form = new FormData();
-        form.append('payload_json', JSON.stringify(data), { contentType: 'application/json' });
+        if (data) form.append('payload_json', JSON.stringify(data), { contentType: 'application/json' });
 
         for (const file of files)
-            if (typeof file === "string") form.append('file', createReadStream(file));
+            if (typeof file === "string") form.append('file', file);
             else form.append('file', file);
         return form;
     }
@@ -49,13 +49,13 @@ export class Utils {
         return JSON.stringify(data, null, 4);
     }
 
-    static parseDiscordEmoji(emoji) {
+    static emojiToUrl(emoji: Emoji) {
         if (emoji.id) return `https://cdn.discordapp.com/emojis/${emoji.id}.${emoji.animated ? 'gif' : 'png'}`;
         return `https://twemoji.maxcdn.com/v/latest/72x72/${emoji.name.codePointAt(0).toString(16)}.png`;
     }
 
     static isEmojiObj(object: any): object is Emoji {
-        return 'id' in object;
+        return 'id' in object && 'name' in object;
     }
 
     static async downloadFile(url: string, options: any = {}, user: User = null) {

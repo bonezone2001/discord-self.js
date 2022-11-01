@@ -164,9 +164,9 @@ export interface Emoji {
     require_colons?: boolean;
     name: string;
     managed?: boolean;
-    id: string;
+    id?: string;
     available?: boolean;
-    animated: boolean;
+    animated?: boolean;
 }
 
 export interface GuildHashes {
