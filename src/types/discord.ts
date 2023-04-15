@@ -542,6 +542,14 @@ export interface UserProfileClass {
     accent_color: null;
 }
 
+export enum PresenceStatus {
+    ONLINE = "online",
+    DND = "dnd",
+    IDLE = "idle",
+    INVISIBLE = "invisible",
+    OFFLINE = "offline"
+}
+
 export interface PaymentSource {
     id: string;
     type: number;
@@ -593,4 +601,101 @@ export interface SubscriptionItem {
     id: string;
     plan_id: string;
     quantity: number;
+}
+
+export interface MemberList {
+    online_count: number;
+    member_count: number;
+    members: Array<MemberListElement[]>;
+}
+
+export interface MemberListElement {
+    group?: MemberListGroup;
+    member?: MemberListMember;
+}
+
+export interface MemberListGroup {
+    id: string;
+    count: number;
+}
+
+export interface MemberListMember {
+    user: MemberListUser;
+    roles: string[];
+    presence: Presence;
+    premium_since: Date | null;
+    pending: boolean;
+    nick: null | string;
+    mute: boolean;
+    joined_at: Date;
+    flags: number;
+    deaf: boolean;
+    communication_disabled_until: Date | null;
+    avatar: null | string;
+}
+
+export interface Presence {
+    user: PresenceUser;
+    status: PresenceStatus;
+    client_status: ClientStatus;
+    activities: Activity[];
+}
+
+export interface Activity {
+    type: number;
+    state?: string;
+    name: string;
+    id: string;
+    emoji?: Emoji;
+    created_at: number;
+    timestamps?: Timestamps;
+    sync_id?: string;
+    session_id?: string;
+    party?: Party;
+    flags?: number;
+    details?: string;
+    assets?: Assets;
+    platform?: string;
+    application_id?: string;
+}
+
+export interface Assets {
+    large_text?: string;
+    large_image: string;
+}
+
+export interface Party {
+    id?: string;
+    size?: number[];
+}
+
+export interface Timestamps {
+    start: number;
+    end?: number;
+}
+
+export interface ClientStatus {
+    desktop?: PresenceStatus;
+    mobile?: PresenceStatus;
+    web?: PresenceStatus;
+}
+
+export interface PresenceUser {
+    id: string;
+}
+
+export interface MemberListUser {
+    username: string;
+    public_flags: number;
+    id: string;
+    discriminator: string;
+    bot: boolean;
+    avatar: string;
+}
+
+export interface Friend {
+    id: string;
+    type: number;
+    nickname: null;
+    user: DiscordUser;
 }

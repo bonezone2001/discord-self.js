@@ -40,11 +40,3 @@ export enum PresenceType {
     CUSTOM = 4,
     COMPETING = 5
 }
-
-export enum PresenceStatus {
-    ONLINE = "online",
-    DND = "dnd",
-    IDLE = "idle",
-    INVISIBLE = "invisible",
-    OFFLINE = "offline"
-}

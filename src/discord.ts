@@ -1,5 +1,5 @@
-import { Channel, CountryCode, DiscordUserProfile, Emoji, Guild, GuildJoinInfo, GuildSummary, Message, PaymentSource, Role, SessionInfo, Subscription } from "./types/discord";
-import { GetMessagesOptions, ParseEmojiResponseType, PresenceStatus, PresenceType, SendMessageReplyOptions, SetGuildInfoOptions } from "./types/discord-user";
+import { Channel, CountryCode, DiscordUserProfile, Emoji, Friend, Guild, GuildJoinInfo, GuildSummary, MemberList, Message, PaymentSource, PresenceStatus, Role, SessionInfo, Subscription } from "./types/discord";
+import { GetMessagesOptions, ParseEmojiResponseType, PresenceType, SendMessageReplyOptions, SetGuildInfoOptions } from "./types/discord-user";
 import { EventEmitter } from 'events';
 import FormData from 'form-data';
 import { Utils } from "./utils";
@@ -67,7 +67,7 @@ export class Discord extends EventEmitter {
         return messages;
     }
 
-    async sendMessage(channelId: string, content: string, files: string[] | Buffer[] = []): Promise<Message> {
+    async sendMessage(channelId: string, content: string, files: ({ data: Buffer, filename: string })[] = []): Promise<Message> {
         const form = Utils.createMessageForm({ content: await this.tryParseCustomEmojis(content) }, files);
         const message = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/channels/${channelId}/messages`,
@@ -226,7 +226,7 @@ export class Discord extends EventEmitter {
 
     // EMOJI
     
-    async createEmoji(guildId: string, name: string, image: Buffer, imageExt: string): Promise<Emoji> {
+    async createCustomEmoji(guildId: string, name: string, image: Buffer, imageExt: string): Promise<Emoji> {
         const emoji = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/emojis`,
             method: "POST",
@@ -240,7 +240,7 @@ export class Discord extends EventEmitter {
         return emoji;
     }
 
-    async deleteEmoji(guildId: string, emojiId: string) {
+    async deleteCustomEmoji(guildId: string, emojiId: string) {
         await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/emojis/${emojiId}`,
             method: "DELETE"
@@ -391,7 +391,6 @@ export class Discord extends EventEmitter {
         return role;
     }
 
-    // UNTESTED
     async createGuildRole(guildId: string, role: Role): Promise<Role> {
         const newRole = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/roles`,
@@ -415,12 +414,45 @@ export class Discord extends EventEmitter {
         return newRole;
     }
 
-    // UNTESTED
     async deleteGuildRole(guildId: string, roleId: string) {
         const response = (await this._user.sendAsUser({
             url: `https://discord.com/api/v9/guilds/${guildId}/roles/${roleId}`,
             method: "DELETE"
         }))?.data;
+    }
+
+    // FRIENDS
+
+    async getFriends(): Promise<Friend[]> {
+        const friends = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/users/@me/relationships`
+        }))?.data;
+
+        Utils.arrayResponseAssert(friends, "Failed to get friends");
+        return friends;
+    }
+
+    async addFriend(userId: string): Promise<void> {
+        const friend = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/users/@me/relationships`,
+            method: "PUT",
+            data: {"id": userId}
+        }))?.data;
+    }
+
+    async addFriendByTag(tag: string): Promise<void> {
+        const friend = (await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/users/@me/relationships`,
+            method: "PUT",
+            data: {"username": tag.split("#")[0], "discriminator": tag.split("#")[1]}
+        }))?.data;
+    }
+
+    async removeFriend(userId: string): Promise<void> {
+        await this._user.sendAsUser({
+            url: `https://discord.com/api/v9/users/@me/relationships/${userId}`,
+            method: "DELETE"
+        });
     }
 
     // PROFILE
@@ -489,7 +521,7 @@ export class Discord extends EventEmitter {
         return commands;
     }
 
-    async sendSlashCommand(channelId: string, cmd: string, options: any) {
+    async sendSlashCommand(channelId: string, cmd: string, options: any): Promise<any> {
         const commands = await this.getSlashCommands(channelId, cmd);
         if (!commands.length) throw new Error(`No commands found for ${cmd}`);
         
@@ -573,66 +605,113 @@ export class Discord extends EventEmitter {
         this._ws.send(JSON.stringify({ op, d: data }));
     }
 
-    async login() {
-        if (this._ws) await this.logout();
-        this._ws = new WebSocket("wss://gateway.discord.gg/?v=9&encoding=json");
+    // https://luna.gitlab.io/discord-unofficial-docs/lazy_guilds.html
+    lazyLoadGuild(guildId: string, channels: string[], start: number = 0, end: number = 99): Promise<MemberList> {
+        return new Promise((resolve, reject) => {
+            if (!this._ws) throw new Error("No websocket connection");
 
-        let outcome: any = null;
-        const errorTimeout = setTimeout(() => {
-            this.logout();
-            throw new Error("Failed to connect to Discord");
-        }, 10e3);
+            let timeout;
+            const listener = (data: any) => {
+                const { d } = data;
+                if (d.guild_id == guildId) {
+                    this.off("GUILD_MEMBER_LIST_UPDATE", listener);
+                    clearTimeout(timeout);
+                    resolve({
+                        online_count: d.online_count,
+                        member_count: d.member_count,
+                        members: d.ops.map((op: any) => op.items)
+                    });
+                }
+            };
+            
+            this.on("GUILD_MEMBER_LIST_UPDATE", listener);
+            timeout = setTimeout(() => {
+                this.off("GUILD_MEMBER_LIST_UPDATE", listener);
+                reject("Timed out");
+            }, 10e3);
 
-        this._ws.on('error', err => {
-            if (err.message.includes("502") || !this.ready) {
+            this._ws.send(JSON.stringify({
+                op: 14,
+                d: {
+                    guild_id: guildId,
+                    typing: true,
+                    threads: true,
+                    activities: true,
+                    members: [],
+                    channels: channels.reduce((acc, channelId) => {
+                        acc[channelId] = [[start, end]];
+                        return acc;
+                    }, {}),
+                    thread_member_lists: []
+                }
+            }));
+        });
+    }
+
+    login(): Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            if (this._ws) await this.logout();
+            this._ws = new WebSocket("wss://gateway.discord.gg/?v=9&encoding=json");
+
+            let outcome: any = null;
+            const errorTimeout = setTimeout(() => {
                 this.logout();
-                outcome = err;
-                throw new Error(err);
-            }
-            console.log(err.message);
+                if (outcome) reject(outcome);
+                else
+                    reject(new Error("Failed to connect to Discord!"));
+            }, 10e3);
+
+            this._ws.on('error', err => {
+                if (err.message.includes("502") || !this.ready) {
+                    this.logout();
+                    clearTimeout(errorTimeout);
+                    reject(err);
+                }
+                console.log(err.message);
+            });
+
+            this._ws.on('message', async (raw: string) => {
+                const data = JSON.parse(raw);
+                const { t, op, d } = data;
+
+                // Discord wants us to identify
+                if (op === 10) {
+                    this._heartbeat = setInterval(() => {
+                        this._ws.send(JSON.stringify({ op: 1, d: null }));
+                    }, d.heartbeat_interval);
+
+                    await this.sendOp(2, {
+                        token: this._user.token,
+                        capabilities: 125,
+                        properties: {
+                            $os: "Windows",
+                            $browser: "disco",
+                            $device: "disco"
+                        }
+                    });
+                    return;
+                }
+
+                // Discord sends use everything we need
+                if (t === "READY") {
+                    clearTimeout(errorTimeout);
+                    this._sessionInfo = d;
+                    outcome = true;
+                }
+
+                if (t) this.emit(t, data);
+                this.emit("raw", data);
+            });
+            
+
+            this._ws.on('close', () => {
+                this.logout();
+                outcome = false; 
+            });
+
+            while (outcome === null) await Utils.sleep(100);
+            resolve(outcome);
         });
-
-        this._ws.on('message', async (raw: string) => {
-            const data = JSON.parse(raw);
-            const { t, op, d } = data;
-
-            // Discord wants us to identify
-            if (op === 10) {
-                this._heartbeat = setInterval(() => {
-                    this._ws.send(JSON.stringify({ op: 1, d: null }));
-                }, d.heartbeat_interval);
-
-                await this.sendOp(2, {
-                    token: this._user.token,
-                    capabilities: 125,
-                    properties: {
-                        $os: "Windows",
-                        $browser: "disco",
-                        $device: "disco"
-                    }
-                });
-                return;
-            }
-
-            // Discord sends use everything we need
-            if (t === "READY") {
-                clearTimeout(errorTimeout);
-                this._sessionInfo = d;
-                outcome = true;
-            }
-
-            if (t) this.emit(t, data);
-            this.emit("raw", data);
-        });
-        
-
-        this._ws.on('close', () => {
-            this.logout();
-            outcome = false; 
-        });
-
-        while (outcome === null) await Utils.sleep(100);
-        return outcome;
     }
 
     async logout() {
